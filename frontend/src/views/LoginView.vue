@@ -22,39 +22,39 @@ const handleLogin = async () => {
 <template>
   <div class="login-container">
     <div class="card text-center">
-      <h2>Login</h2>
-      <p class="mb-2">Enter your credentials to access the platform</p>
+       <h2>Iniciar sesión</h2>
+       <p class="mb-2">Ingrese sus credenciales para acceder a la plataforma</p>
       
       <div v-if="authStore.error" class="error-message">
         {{ authStore.error }}
       </div>
 
       <form @submit.prevent="handleLogin">
-        <div class="form-group">
-          <label for="username">Username</label>
-          <input 
-            id="username" 
-            v-model="username" 
-            type="text" 
-            class="form-control" 
-            required 
-            placeholder="Your username"
-          />
-        </div>
-        <div class="form-group">
-          <label for="password">Password</label>
-          <input 
-            id="password" 
-            v-model="password" 
-            type="password" 
-            class="form-control" 
-            required 
-            placeholder="Your password"
-          />
-        </div>
-        <button type="submit" class="btn btn-primary" :disabled="authStore.loading" style="width: 100%">
-          {{ authStore.loading ? 'Logging in...' : 'Login' }}
-        </button>
+         <div class="form-group">
+           <label for="username">Usuario</label>
+           <input 
+             id="username" 
+             v-model="username" 
+             type="text" 
+             class="form-control" 
+             required 
+             placeholder="Su usuario"
+           />
+         </div>
+         <div class="form-group">
+           <label for="password">Contraseña</label>
+           <input 
+             id="password" 
+             v-model="password" 
+             type="password" 
+             class="form-control" 
+             required 
+             placeholder="Su contraseña"
+           />
+         </div>
+         <button type="submit" class="btn btn-primary" :disabled="authStore.loading" style="width: 100%">
+           {{ authStore.loading ? 'Iniciando sesión...' : 'Iniciar sesión' }}
+         </button>
       </form>
     </div>
   </div>

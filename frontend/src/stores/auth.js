@@ -34,10 +34,10 @@ export const useAuthStore = defineStore('auth', {
 
         // Fetch user profile to get role
         await this.fetchProfile();
-      } catch (err) {
-        this.error = err.response?.data?.detail || 'Login failed';
-        throw err;
-      } finally {
+       } catch (err) {
+         this.error = err.response?.data?.detail || 'Error al iniciar sesión';
+         throw err;
+       } finally {
         this.loading = false;
       }
     },

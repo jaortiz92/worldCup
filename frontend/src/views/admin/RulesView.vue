@@ -21,9 +21,9 @@ const fetchRules = async () => {
   try {
     const response = await apiClient.get('/rules/');
     rules.value = response.data;
-  } catch (err) {
-    alert('Failed to fetch rules');
-  } finally {
+   } catch (err) {
+     alert('Error al cargar las reglas');
+   } finally {
     loading.value = false;
   }
 };
@@ -46,9 +46,9 @@ const handleSaveRule = async () => {
       correct_away_goals_points: 1, 
       is_active: false 
     };
-  } catch (err) {
-    alert(err.response?.data?.detail || 'Failed to save rule');
-  }
+   } catch (err) {
+     alert(err.response?.data?.detail || 'Error al guardar la regla');
+   }
 };
 
 const startEdit = (rule) => {
@@ -78,26 +78,26 @@ onMounted(fetchRules);
 
 <template>
   <div>
-    <div class="flex justify-between align-center mb-2">
-      <h1>Scoring Rules</h1>
-      <button @click="openCreateModal" class="btn btn-primary">Add Rule</button>
-    </div>
-
-    <div class="card">
-      <div v-if="loading">Loading...</div>
+     <div class="flex justify-between align-center mb-2">
+       <h1>Reglas de Puntuación</h1>
+       <button @click="openCreateModal" class="btn btn-primary">Agregar Regla</button>
+     </div>
+ 
+     <div class="card">
+       <div v-if="loading">Cargando...</div>
       <div v-else class="table-responsive">
         <table>
-          <thead>
-            <tr>
-              <th>Rule Name</th>
-              <th>Exact Score</th>
-              <th>Winner</th>
-              <th>Home Goals</th>
-              <th>Away Goals</th>
-              <th>Active</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
+           <thead>
+             <tr>
+               <th>Nombre de la Regla</th>
+               <th>Marcador Exacto</th>
+               <th>Ganador</th>
+               <th>Goles Local</th>
+               <th>Goles Visitante</th>
+               <th>Activo</th>
+               <th>Acciones</th>
+             </tr>
+           </thead>
           <tbody>
             <tr v-for="rule in rules" :key="rule.id">
               <td>{{ rule.rule_name }}</td>
@@ -106,9 +106,9 @@ onMounted(fetchRules);
               <td>{{ rule.correct_home_goals_points }}</td>
               <td>{{ rule.correct_away_goals_points }}</td>
               <td>{{ rule.is_active ? '✅' : '❌' }}</td>
-              <td>
-                <button @click="startEdit(rule)" class="btn btn-primary" style="padding: 5px 10px; font-size: 0.8rem;">Edit</button>
-              </td>
+               <td>
+                 <button @click="startEdit(rule)" class="btn btn-primary" style="padding: 5px 10px; font-size: 0.8rem;">Editar</button>
+               </td>
             </tr>
           </tbody>
         </table>
@@ -117,38 +117,38 @@ onMounted(fetchRules);
 
     <div v-if="showingCreateModal" class="modal-overlay">
       <div class="modal-content card">
-        <h2>{{ editingRule ? 'Edit' : 'Create' }} Scoring Rule</h2>
-        <form @submit.prevent="handleSaveRule">
-          <div class="form-group">
-            <label>Rule Name</label>
-            <input v-model="form.rule_name" type="text" class="form-control" required />
-          </div>
-          <div class="form-group">
-            <label>Points for Exact Score</label>
-            <input v-model.number="form.correct_score_points" type="number" class="form-control" required />
-          </div>
-          <div class="form-group">
-            <label>Points for Correct Winner/Draw</label>
-            <input v-model.number="form.correct_winner_points" type="number" class="form-//control" required />
-          </div>
-          <div class="form-group">
-            <label>Points for Correct Home Goals</label>
-            <input v-model.number="form.correct_home_goals_points" type="number" class="form-control" required />
-          </div>
-          <div class="form-group">
-            <label>Points for Correct Away Goals</label>
-            <input v-model.number="form.correct_away_goals_points" type="number" class="form-control" required />
-          </div>
-          <div class="form-group">
-            <label>
-              <input type="checkbox" v-model="form.is_active" />
-              Make Active
-            </label>
-          </div>
-          <div class="flex justify-between align-center mt-2">
-            <button type="button" @click="showingCreateModal = false" class="btn btn-danger">Cancel</button>
-            <button type="submit" class="btn btn-primary">Save Rule</button>
-          </div>
+         <h2>{{ editingRule ? 'Editar' : 'Crear' }} Regla de Puntuación</h2>
+         <form @submit.prevent="handleSaveRule">
+           <div class="form-group">
+             <label>Nombre de la Regla</label>
+             <input v-model="form.rule_name" type="text" class="form-control" required />
+           </div>
+           <div class="form-group">
+             <label>Puntos por Marcador Exacto</label>
+             <input v-model.number="form.correct_score_points" type="number" class="form-control" required />
+           </div>
+           <div class="form-group">
+             <label>Puntos por Ganador/Empate Correcto</label>
+             <input v-model.number="form.correct_winner_points" type="number" class="form-control" required />
+           </div>
+           <div class="form-group">
+             <label>Puntos por Goles Local Correctos</label>
+             <input v-model.number="form.correct_home_goals_points" type="number" class="form-control" required />
+           </div>
+           <div class="form-group">
+             <label>Puntos por Goles Visitante Correctos</label>
+             <input v-model.number="form.correct_away_goals_points" type="number" class="form-control" required />
+           </div>
+           <div class="form-group">
+             <label>
+               <input type="checkbox" v-model="form.is_active" />
+               Activar
+             </label>
+           </div>
+           <div class="flex justify-between align-center mt-2">
+             <button type="button" @click="showingCreateModal = false" class="btn btn-danger">Cancelar</button>
+             <button type="submit" class="btn btn-primary">Guardar Regla</button>
+           </div>
         </form>
       </div>
     </div>

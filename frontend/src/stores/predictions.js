@@ -23,9 +23,9 @@ export const usePredictionsStore = defineStore('predictions', {
       try {
         const response = await apiClient.get('/predictions/leaderboard');
         this.leaderboard = response.data;
-      } catch (err) {
-        this.error = err.response?.data?.detail || 'Failed to fetch leaderboard';
-      } finally {
+       } catch (err) {
+         this.error = err.response?.data?.detail || 'Error al cargar la tabla de posiciones';
+       } finally {
         this.loading = false;
       }
     },

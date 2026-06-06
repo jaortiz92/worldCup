@@ -57,9 +57,9 @@ const submitPrediction = async () => {
     
     success.value = true;
     setTimeout(() => router.push('/'), 2000);
-  } catch (err) {
-    error.value = err.response?.data?.detail || 'Failed to submit prediction';
-  } finally {
+   } catch (err) {
+     error.value = err.response?.data?.detail || 'Error al enviar la predicción';
+   } finally {
     loading.value = false;
   }
 };
@@ -68,16 +68,16 @@ const submitPrediction = async () => {
 <template>
   <div>
     <div class="flex align-center mb-2">
-      <router-link to="/" class="back-link">
-        ← Back to Dashboard
-      </router-link>
+       <router-link to="/" class="back-link">
+         ← Volver al Panel
+       </router-link>
     </div>
 
     <div class="prediction-container">
       <div class="prediction-card">
-        <h2 class="text-center">Place Your Prediction</h2>
-        
-        <div v-if="!match" class="loading-state text-center">Loading match details...</div>
+         <h2 class="text-center">Haga su Predicción</h2>
+         
+         <div v-if="!match" class="loading-state text-center">Cargando detalles del partido...</div>
         <div v-else>
           <div class="scoreboard">
             <!-- Home Team -->
@@ -121,26 +121,26 @@ const submitPrediction = async () => {
             </div>
           </div>
 
-          <div class="match-meta text-center">
-            <span class="date-label">Match Date: {{ new Date(match.match_date).toLocaleString() }}</span>
-          </div>
+           <div class="match-meta text-center">
+             <span class="date-label">Fecha del Partido: {{ new Date(match.match_date).toLocaleString() }}</span>
+           </div>
 
           <div v-if="isLocked" class="lock-overlay">
-            <div class="lock-content">
-              <span class="lock-icon">🔒</span>
-              <p>Predictions are locked because the match has already started or finished.</p>
-            </div>
+             <div class="lock-content">
+               <span class="lock-icon">🔒</span>
+               <p>Las predicciones están cerradas porque el partido ya comenzó o terminó.</p>
+             </div>
           </div>
 
           <form @submit.prevent="submitPrediction" v-if="!isLocked">
             <div v-if="error" class="error-message">{{ error }}</div>
-            <div v-if="success" class="success-message">
-              🎉 Prediction saved successfully! Redirecting...
-            </div>
+             <div v-if="success" class="success-message">
+               🎉 ¡Predicción guardada con éxito! Redireccionando...
+             </div>
 
-            <button type="submit" class="btn-submit" :disabled="loading">
-              {{ loading ? 'Saving...' : 'Submit Prediction' }}
-            </button>
+             <button type="submit" class="btn-submit" :disabled="loading">
+               {{ loading ? 'Guardando...' : 'Enviar Predicción' }}
+             </button>
           </form>
         </div>
       </div>

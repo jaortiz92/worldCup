@@ -14,9 +14,9 @@ export const useTeamsStore = defineStore('teams', {
       try {
         const response = await apiClient.get('/teams/');
         this.teams = response.data;
-      } catch (err) {
-        this.error = err.response?.data?.detail || 'Failed to fetch teams';
-      } finally {
+       } catch (err) {
+         this.error = err.response?.data?.detail || 'Error al cargar los equipos';
+       } finally {
         this.loading = false;
       }
     },

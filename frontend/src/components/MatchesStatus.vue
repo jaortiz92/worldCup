@@ -8,12 +8,12 @@ const predictionsStore = usePredictionsStore();
 
 <template>
   <div class="matches-column">
-    <div class="section-title">
-      <h2>Upcoming Matches</h2>
-      <span class="badge-count">{{ matchesStore.matches.length }} matches</span>
-    </div>
-    
-    <div v-if="matchesStore.loading" class="loading-state">Loading matches...</div>
+     <div class="section-title">
+       <h2>Próximos Partidos</h2>
+       <span class="badge-count">{{ matchesStore.matches.length }} partidos</span>
+     </div>
+     
+     <div v-if="matchesStore.loading" class="loading-state">Cargando partidos...</div>
     <div v-else-if="matchesStore.error" class="error-message">{{ matchesStore.error }}</div>
     <div v-else class="matches-grid">
       <div v-for="match in matchesStore.matches" :key="match.id" class="match-card">
@@ -51,14 +51,14 @@ const predictionsStore = usePredictionsStore();
         </div>
         
         <div class="card-footer">
-          <router-link 
-            v-if="match.status === 'pending' || match.status === 'scheduled'" 
-            :to="`/predict/${match.id}`" 
-            class="btn-predict"
-          >
-            Predict Score
-          </router-link>
-          <span v-else class="locked-text">Locked 🔒</span>
+             <router-link 
+               v-if="match.status === 'pending' || match.status === 'scheduled'" 
+               :to="`/predict/${match.id}`" 
+               class="btn-predict"
+             >
+               Predecir Marcador
+             </router-link>
+             <span v-else class="locked-text">Cerrado 🔒</span>
         </div>
       </div>
     </div>

@@ -21,42 +21,42 @@ const handleCreate = async () => {
     await teamsStore.createTeam(newTeam.value);
     showingCreateModal.value = false;
     newTeam.value = { name: '', flag_url: '', code_iso: '', groups: '' };
-  } catch (err) {
-    alert(err.response?.data?.detail || 'Failed to create team');
-  }
+   } catch (err) {
+     alert(err.response?.data?.detail || 'Error al crear el equipo');
+   }
 };
 
-const handleDelete = async (id) => {
-  if (confirm('Are you sure you want to delete this team? Matches associated with this team might be affected.')) {
-    try {
+ const handleDelete = async (id) => {
+   if (confirm('¿Está seguro de que desea eliminar este equipo? Los partidos asociados podrían verse afectados.')) {
+     try {
       await teamsStore.deleteTeam(id);
-    } catch (err) {
-      alert(err.response?.data?.detail || 'Failed to delete team');
-    }
+   } catch (err) {
+     alert(err.response?.data?.detail || 'Error al eliminar el equipo');
+   }
   }
 };
 </script>
 
 <template>
   <div>
-    <div class="flex justify-between align-center mb-2">
-      <h1>Manage Teams</h1>
-      <button @click="showingCreateModal = true" class="btn btn-primary">Add Team</button>
-    </div>
-
-    <div class="card">
-      <div v-if="teamsStore.loading">Loading teams...</div>
+     <div class="flex justify-between align-center mb-2">
+       <h1>Gestionar Equipos</h1>
+       <button @click="showingCreateModal = true" class="btn btn-primary">Agregar Equipo</button>
+     </div>
+ 
+     <div class="card">
+       <div v-if="teamsStore.loading">Cargando equipos...</div>
       <div v-else class="table-responsive">
         <table>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>ISO Code</th>
-              <th>Group</th>
-              <th>Flag</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
+           <thead>
+             <tr>
+               <th>Nombre</th>
+               <th>Código ISO</th>
+               <th>Grupo</th>
+               <th>Bandera</th>
+               <th>Acciones</th>
+             </tr>
+           </thead>
           <tbody>
             <tr v-for="team in teamsStore.teams" :key="team.id">
               <td><strong>{{ team.name }}</strong></td>
@@ -64,11 +64,11 @@ const handleDelete = async (id) => {
               <td>{{ team.groups }}</td>
               <td>
                 <img v-if="team.flag_url" :src="team.flag_url" alt="Flag" style="width: 30px; height: auto;" />
-                <span v-else>No flag</span>
+                 <span v-else>Sin bandera</span>
               </td>
-              <td>
-                <button @click="handleDelete(team.id)" class="btn btn-danger" style="padding: 5px 10px; font-size: 0.8rem;">Delete</button>
-              </td>
+               <td>
+                 <button @click="handleDelete(team.id)" class="btn btn-danger" style="padding: 5px 10px; font-size: 0.8rem;">Eliminar</button>
+               </td>
             </tr>
           </tbody>
         </table>
@@ -77,29 +77,29 @@ const handleDelete = async (id) => {
 
     <!-- Create Modal -->
     <div v-if="showingCreateModal" class="modal-overlay">
-      <div class="modal-content card">
-        <h2>Add New Team</h2>
-        <form @submit.prevent="handleCreate">
-          <div class="form-group">
-            <label>Team Name</label>
-            <input v-model="newTeam.name" type="text" class="form-control" required />
-          </div>
-          <div class="form-group">
-            <label>ISO Code (e.g. ARG)</label>
-            <input v-model="newTeam.code_iso" type="text" class="form-control" />
-          </div>
-          <div class="form-group">
-            <label>Group (e.g. Group A)</label>
-            <input v-model="newTeam.groups" type="text" class="form-control" />
-          </div>
-          <div class="form-group">
-            <label>Flag URL</label>
-            <input v-model="newTeam.flag_url" type="url" class="form-control" />
-          </div>
-          <div class="flex justify-between align-center mt-2">
-            <button type="button" @click="showingCreateModal = false" class="btn btn-danger">Cancel</button>
-            <button type="submit" class="btn btn-primary">Save Team</button>
-          </div>
+       <div class="modal-content card">
+         <h2>Agregar Nuevo Equipo</h2>
+         <form @submit.prevent="handleCreate">
+           <div class="form-group">
+             <label>Nombre del Equipo</label>
+             <input v-model="newTeam.name" type="text" class="form-control" required />
+           </div>
+           <div class="form-group">
+             <label>Código ISO (ej. COL)</label>
+             <input v-model="newTeam.code_iso" type="text" class="form-control" />
+           </div>
+           <div class="form-group">
+             <label>Grupo (ej. Grupo A)</label>
+             <input v-model="newTeam.groups" type="text" class="form-control" />
+           </div>
+           <div class="form-group">
+             <label>URL de la Bandera</label>
+             <input v-model="newTeam.flag_url" type="url" class="form-control" />
+           </div>
+           <div class="flex justify-between align-center mt-2">
+             <button type="button" @click="showingCreateModal = false" class="btn btn-danger">Cancelar</button>
+             <button type="submit" class="btn btn-primary">Guardar Equipo</button>
+           </div>
         </form>
       </div>
     </div>

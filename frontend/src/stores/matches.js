@@ -14,9 +14,9 @@ export const useMatchesStore = defineStore('matches', {
       try {
         const response = await apiClient.get('/matches/');
         this.matches = response.data;
-      } catch (err) {
-        this.error = err.response?.data?.detail || 'Failed to fetch matches';
-      } finally {
+       } catch (err) {
+         this.error = err.response?.data?.detail || 'Error al cargar los partidos';
+       } finally {
         this.loading = false;
       }
     },

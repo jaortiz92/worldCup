@@ -19,8 +19,8 @@ onMounted(async () => {
 <template>
   <div>
     <div class="header-section mb-2">
-      <h1>🏆 Tournament Dashboard</h1>
-      <p class="subtitle">Predict the scores and climb the leaderboard!</p>
+       <h1>🏆 Panel del Torneo</h1>
+       <p class="subtitle">¡Prediga los marcadores y suba en la tabla de posiciones!</p>
     </div>
 
     <div class="dashboard-grid">
@@ -29,12 +29,12 @@ onMounted(async () => {
 
       <!-- Leaderboard Section -->
       <div class="leaderboard-column">
-        <div class="section-title">
-          <h2>Leaderboard</h2>
-          <span class="trophy-icon">🥇</span>
-        </div>
-        
-        <div v-if="predictionsStore.loading" class="loading-state">Loading...</div>
+         <div class="section-title">
+           <h2>Tabla de Posiciones</h2>
+           <span class="trophy-icon">🥇</span>
+         </div>
+         
+         <div v-if="predictionsStore.loading" class="loading-state">Cargando...</div>
         <div v-else-if="predictionsStore.error" class="error-message">{{ predictionsStore.error }}</div>
         <div v-else class="leaderboard-card">
           <div class="leaderboard-list">
