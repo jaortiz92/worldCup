@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue';
 import { useMatchesStore } from '../../stores/matches';
 import { useTeamsStore } from '../../stores/teams';
+import { formatToLocalTime } from '../../utils/date';
 
 const matchesStore = useMatchesStore();
 const teamsStore = useTeamsStore();
@@ -30,10 +31,19 @@ const handleCreate = async () => {
      alert('El equipo local y el visitante no pueden ser el mismo');
      return;
    }
-  try {
-    await matchesStore.createMatch(newMatch.value);
-    showingCreateModal.value = false;
-    newMatch.value = { home_team_id: '', away_team_id: '', match_date: '', stage: 'Group Stage', status: 'pending' };
+   try {
+     const date = new Date(newMatch.value.match_date);
+     if (isNaN(date.getTime())) {
+       alert('Por favor, ingrese una fecha válida');
+       return;
+     }
+     const matchData = { 
+       ...newMatch.value, 
+       match_date: date.toISOString() 
+     };
+     await matchesStore.createMatch(matchData);
+     showingCreateModal.value = false;
+     newMatch.value = { home_team_id: '', away_team_id: '', match_date: '', stage: 'Group Stage', status: 'pending' };
    } catch (err) {
      alert(err.response?.data?.detail || 'Error al crear el partido');
    }
@@ -75,11 +85,11 @@ const handleUpdate = async () => {
              </tr>
            </thead>
           <tbody>
-            <tr v-for="match in matchesStore.matches" :key="match.id">
-              <td>{{ match.home_team?.name }} vs {{ match.away_team?.name }}</td>
-              <td>{{ new Date(match.match_date).toLocaleString() }}</td>
-              <td>{{ match.status }}</td>
-              <td>{{ match.home_goals ?? '-' }} - {{ match.away_goals ?? '-' }}</td>
+             <tr v-for="match in matchesStore.matches" :key="match.id">
+               <td>{{ match.home_team?.name }} vs {{ match.away_team?.name }}</td>
+               <td>{{ formatToLocalTime(match.match_date) }}</td>
+               <td>{{ match.status }}</td>
+               <td>{{ match.home_goals ?? '-' }} - {{ match.away_goals ?? '-' }}</td>
                <td>
                  <button @click="startEdit(match)" class="btn btn-primary" style="padding: 5px 10px; font-size: 0.8rem;">Editar</button>
                </td>

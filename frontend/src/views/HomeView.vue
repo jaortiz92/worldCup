@@ -66,6 +66,15 @@ onMounted(async () => {
   color: var(--primary-color);
   margin-bottom: 0.5rem;
 }
+
+@media (max-width: 768px) {
+  .header-section h1 {
+    font-size: 1.8rem;
+  }
+  .header-section {
+    margin-bottom: 2rem;
+  }
+}
 .subtitle {
   color: gray;
   font-size: 1.1rem;
@@ -75,6 +84,13 @@ onMounted(async () => {
   display: grid;
   grid-template-columns: 2fr 1fr;
   gap: 30px;
+}
+
+@media (max-width: 1024px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
 }
 
 .section-title {
@@ -106,6 +122,15 @@ onMounted(async () => {
   border-radius: 10px;
   background: #f8f9fa;
   transition: background 0.2s;
+}
+
+@media (max-width: 480px) {
+  .leaderboard-item {
+    padding: 15px 12px;
+  }
+  .username {
+    font-size: 0.9rem;
+  }
 }
 .leaderboard-item:hover {
   background: #f1f3f5;

@@ -1,71 +1,155 @@
 <script setup>
+import { ref, computed } from 'vue';
 import { useMatchesStore } from '../stores/matches';
 import { usePredictionsStore } from '../stores/predictions';
+import { formatToLocalTime, isSameDayLocal } from '../utils/date';
 
 const matchesStore = useMatchesStore();
 const predictionsStore = usePredictionsStore();
+
+const activeTab = ref('today');
+
+const filteredMatches = computed(() => {
+  const matches = matchesStore.matches;
+  const now = new Date();
+  
+  return matches.filter(match => {
+    const matchDate = new Date(match.match_date.replace(' ', 'T') + (match.match_date.endsWith('Z') ? '' : 'Z'));
+    const isToday = isSameDayLocal(match.match_date);
+    const isPast = matchDate < now;
+    const isFinished = match.status === 'finished';
+
+    if (activeTab.value === 'today') {
+      return isToday;
+    } else if (activeTab.value === 'upcoming') {
+      // Upcoming: Not today and in the future
+      return !isToday && !isPast && !isFinished;
+    } else if (activeTab.value === 'results') {
+      // Results: Finished or passed today
+      return isFinished || isPast;
+    }
+    return true;
+  });
+});
 </script>
 
 <template>
   <div class="matches-column">
-     <div class="section-title">
-       <h2>Próximos Partidos</h2>
-       <span class="badge-count">{{ matchesStore.matches.length }} partidos</span>
-     </div>
-     
-     <div v-if="matchesStore.loading" class="loading-state">Cargando partidos...</div>
-    <div v-else-if="matchesStore.error" class="error-message">{{ matchesStore.error }}</div>
-    <div v-else class="matches-grid">
-      <div v-for="match in matchesStore.matches" :key="match.id" class="match-card">
-        <div class="card-header">
-          <span class="match-date">{{ new Date(match.match_date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) }}</span>
-          <span :class="['status-badge', `status-${match.status}`]">{{ match.status }}</span>
-        </div>
-        
-        <div class="match-main">
-          <div class="team home">
-            <img v-if="match.home_team?.flag_url" :src="match.home_team.flag_url" class="team-flag" />
-            <span class="team-name">{{ match.home_team?.name }}</span>
-            <div class="score-container">
-              <span v-if="match.status === 'finished'" class="final-score">{{ match.home_goals }}</span>
-              <span v-if="predictionsStore.myPredictions.find(p => p.match_id === match.id)" 
-                    :class="['predicted-score', { 'is-small': match.status === 'finished' }]">
-                {{ predictionsStore.myPredictions.find(p => p.match_id === match.id).predicted_home_goals }}
-              </span>
-            </div>
-          </div>
-          
-          <div class="match-vs">VS</div>
-          
-          <div class="team away">
-            <img v-if="match.away_team?.flag_url" :src="match.away_team.flag_url" class="team-flag" />
-            <span class="team-name">{{ match.away_team?.name }}</span>
-            <div class="score-container">
-              <span v-if="match.status === 'finished'" class="final-score">{{ match.away_goals }}</span>
-              <span v-if="predictionsStore.myPredictions.find(p => p.match_id === match.id)" 
-                    :class="['predicted-score', { 'is-small': match.status === 'finished' }]">
-                {{ predictionsStore.myPredictions.find(p => p.match_id === match.id).predicted_away_goals }}
-              </span>
-            </div>
-          </div>
-        </div>
-        
-        <div class="card-footer">
-             <router-link 
-               v-if="match.status === 'pending' || match.status === 'scheduled'" 
-               :to="`/predict/${match.id}`" 
-               class="btn-predict"
-             >
-               Predecir Marcador
-             </router-link>
-             <span v-else class="locked-text">Cerrado 🔒</span>
-        </div>
+      <div class="section-title">
+        <h2>Próximos Partidos</h2>
+        <span class="badge-count">{{ filteredMatches.length }} partidos</span>
       </div>
-    </div>
+
+      <div class="tabs-container">
+        <button 
+          @click="activeTab = 'today'" 
+          :class="['tab-btn', { active: activeTab === 'today' }]"
+        >
+          📅 Hoy
+        </button>
+        <button 
+          @click="activeTab = 'upcoming'" 
+          :class="['tab-btn', { active: activeTab === 'upcoming' }]"
+        >
+          ⏳ Próximos
+        </button>
+        <button 
+          @click="activeTab = 'results'" 
+          :class="['tab-btn', { active: activeTab === 'results' }]"
+        >
+          ✅ Resultados
+        </button>
+      </div>
+      
+      <div v-if="matchesStore.loading" class="loading-state">Cargando partidos...</div>
+     <div v-else-if="matchesStore.error" class="error-message">{{ matchesStore.error }}</div>
+     <div v-else>
+       <div v-if="filteredMatches.length === 0" class="empty-state">
+         No hay partidos disponibles en esta categoría.
+       </div>
+       <div v-else class="matches-grid">
+         <div v-for="match in filteredMatches" :key="match.id" class="match-card">
+            <div class="card-header">
+              <span class="match-date">{{ formatToLocalTime(match.match_date) }}</span>
+              <span :class="['status-badge', `status-${match.status}`]">{{ match.status }}</span>
+            </div>
+            
+            <div class="match-main">
+              <div class="team home">
+                <img v-if="match.home_team?.flag_url" :src="match.home_team.flag_url" class="team-flag" />
+                <span class="team-name">{{ match.home_team?.name }}</span>
+                <div class="score-container">
+                  <span v-if="match.status === 'finished'" class="final-score">{{ match.home_goals }}</span>
+                  <span v-if="predictionsStore.myPredictions.find(p => p.match_id === match.id)" 
+                        :class="['predicted-score', { 'is-small': match.status === 'finished' }]">
+                    {{ predictionsStore.myPredictions.find(p => p.match_id === match.id).predicted_home_goals }}
+                  </span>
+                </div>
+              </div>
+              
+              <div class="match-vs">VS</div>
+              
+              <div class="team away">
+                <img v-if="match.away_team?.flag_url" :src="match.away_team.flag_url" class="team-flag" />
+                <span class="team-name">{{ match.away_team?.name }}</span>
+                <div class="score-container">
+                  <span v-if="match.status === 'finished'" class="final-score">{{ match.away_goals }}</span>
+                  <span v-if="predictionsStore.myPredictions.find(p => p.match_id === match.id)" 
+                        :class="['predicted-score', { 'is-small': match.status === 'finished' }]">
+                    {{ predictionsStore.myPredictions.find(p => p.match_id === match.id).predicted_away_goals }}
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="card-footer">
+                 <router-link 
+                   v-if="match.status === 'pending' || match.status === 'scheduled'" 
+                   :to="`/predict/${match.id}`" 
+                   class="btn-predict"
+                 >
+                   Predecir Marcador
+                 </router-link>
+                 <span v-else class="locked-text">Cerrado 🔒</span>
+            </div>
+         </div>
+       </div>
+     </div>
   </div>
 </template>
 
 <style scoped>
+.tabs-container {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 2rem;
+  justify-content: center;
+}
+
+.tab-btn {
+  padding: 8px 16px;
+  border: none;
+  background: #eee;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  color: gray;
+}
+
+.tab-btn.active {
+  background: var(--primary-color);
+  color: white;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  color: gray;
+  font-style: italic;
+}
+
 .section-title {
   display: flex;
   justify-content: space-between;

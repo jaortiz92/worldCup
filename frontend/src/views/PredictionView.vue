@@ -3,6 +3,7 @@ import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useMatchesStore } from '../stores/matches';
 import { usePredictionsStore } from '../stores/predictions';
+import { formatToLocalTime } from '../utils/date';
 
 const route = useRoute();
 const router = useRouter();
@@ -10,8 +11,8 @@ const matchesStore = useMatchesStore();
 const predictionsStore = usePredictionsStore();
 
 const matchId = parseInt(route.params.id);
-const homeGoals = ref(0);
-const awayGoals = ref(0);
+const homeGoals = ref(null);
+const awayGoals = ref(null);
 const loading = ref(false);
 const error = ref(null);
 const success = ref(false);
@@ -30,6 +31,10 @@ const isLocked = computed(() => {
   return now.getTime() >= matchDate.getTime();
 });
 
+const isFormInvalid = computed(() => {
+  return homeGoals.value === null || awayGoals.value === null || loading.value;
+});
+
 onMounted(async () => {
   await matchesStore.fetchMatches();
 });
@@ -41,8 +46,8 @@ const submitPrediction = async () => {
   try {
     const predictionData = {
       match_id: matchId,
-      predicted_home_goals: homeGoals.value,
-      predicted_away_goals: awayGoals.value,
+      predicted_home_goals: homeGoals.value ?? 0,
+      predicted_away_goals: awayGoals.value ?? 0,
     };
     
     try {
@@ -94,6 +99,8 @@ const submitPrediction = async () => {
                   min="0" 
                   class="score-input" 
                   required 
+                  inputmode="numeric"
+                  pattern="[0-9]*"
                 />
                 <span v-else class="locked-score">{{ match.home_goals ?? 0 }}</span>
               </div>
@@ -115,6 +122,8 @@ const submitPrediction = async () => {
                   min="0" 
                   class="score-input" 
                   required 
+                  inputmode="numeric"
+                  pattern="[0-9]*"
                 />
                 <span v-else class="locked-score">{{ match.away_goals ?? 0 }}</span>
               </div>
@@ -122,7 +131,7 @@ const submitPrediction = async () => {
           </div>
 
            <div class="match-meta text-center">
-             <span class="date-label">Fecha del Partido: {{ new Date(match.match_date).toLocaleString() }}</span>
+             <span class="date-label">Fecha del Partido: {{ formatToLocalTime(match.match_date) }}</span>
            </div>
 
           <div v-if="isLocked" class="lock-overlay">
@@ -138,9 +147,9 @@ const submitPrediction = async () => {
                🎉 ¡Predicción guardada con éxito! Redireccionando...
              </div>
 
-             <button type="submit" class="btn-submit" :disabled="loading">
-               {{ loading ? 'Guardando...' : 'Enviar Predicción' }}
-             </button>
+              <button type="submit" class="btn-submit" :disabled="isFormInvalid">
+                {{ loading ? 'Guardando...' : 'Enviar Predicción' }}
+              </button>
           </form>
         </div>
       </div>
@@ -175,6 +184,13 @@ const submitPrediction = async () => {
   overflow: hidden;
 }
 
+@media (max-width: 768px) {
+  .prediction-card {
+    padding: 20px;
+    border-radius: 16px;
+  }
+}
+
 .scoreboard {
   display: flex;
   justify-content: space-between;
@@ -186,6 +202,15 @@ const submitPrediction = async () => {
   border-radius: 20px;
   color: white;
   box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+}
+
+@media (max-width: 600px) {
+  .scoreboard {
+    flex-direction: column;
+    padding: 30px 20px;
+    gap: 20px;
+    margin: 2rem 0;
+  }
 }
 
 .team-section {
@@ -210,6 +235,20 @@ const submitPrediction = async () => {
   font-size: 1.5rem;
   font-weight: bold;
   text-transform: uppercase;
+}
+
+@media (max-width: 600px) {
+  .team-name {
+    font-size: 1.2rem;
+    text-align: center;
+  }
+  .team-section.away .team-info {
+    flex-direction: row;
+    justify-content: center;
+  }
+  .team-section.away {
+    text-align: center;
+  }
 }
 .big-flag {
   width: 60px;
@@ -248,6 +287,13 @@ const submitPrediction = async () => {
   font-weight: 900;
   color: var(--accent-color);
   font-style: italic;
+}
+
+@media (max-width: 600px) {
+  .vs-divider {
+    font-size: 1.5rem;
+    opacity: 0.8;
+  }
 }
 
 .match-meta {
@@ -294,10 +340,16 @@ const submitPrediction = async () => {
   border-radius: 12px;
   cursor: pointer;
   width: 100%;
-  transition: transform 0.2s;
+  transition: all 0.2s;
 }
-.btn-submit:hover {
+.btn-submit:hover:not(:disabled) {
   transform: scale(1.02);
+}
+.btn-submit:disabled {
+  background: #ccc;
+  color: #666;
+  cursor: not-allowed;
+  transform: none;
 }
 .success-message {
   text-align: center;
