@@ -138,28 +138,31 @@ onMounted(fetchAllData);
               <th v-if="match?.status === 'finished'">Puntos</th>
             </tr>
           </thead>
-          <tbody>
-            <tr v-for="pred in predictions" :key="pred.username" 
-                :class="[getRowClass(pred), { 'is-me': pred.username === authStore.user?.username }]">
-              <td class="user-cell">
-                <span v-if="pred.username === authStore.user?.username" class="me-icon">👤</span>
-                {{ pred.username }}
-              </td>
-              <td class="score-cell">
-                <span :class="['goal', { 'correct': match?.status === 'finished' && pred.predicted_home_goals === match?.home_goals, 'wrong': match?.status === 'finished' && pred.predicted_home_goals !== match?.home_goals }]">
-                  {{ pred.predicted_home_goals }}
-                </span>
-                <span class="separator">-</span>
-                <span :class="['goal', { 'correct': match?.status === 'finished' && pred.predicted_away_goals === match?.away_goals, 'wrong': match?.status === 'finished' && pred.predicted_away_goals !== match?.away_goals }]">
-                  {{ pred.predicted_away_goals }}
-                </span>
-                <span v-if="getRowClass(pred) === 'row-exact'" class="winner-badge">🏆</span>
-              </td>
-              <td v-if="match?.status === 'finished'" class="points-cell">
-                {{ calculatePoints(pred) }} pts
-              </td>
-            </tr>
-          </tbody>
+            <tbody>
+              <tr v-for="pred in predictions" :key="pred.username" 
+                  :class="[getRowClass(pred), { 'is-me': pred.username === authStore.user?.username }]">
+                <td class="user-cell">
+                  <span v-if="pred.username === authStore.user?.username" class="me-icon">👤</span>
+                  {{ pred.username }}
+                </td>
+                <td class="score-cell">
+                  <div class="score-wrapper">
+                    <span :class="['goal', { 'correct': match?.status === 'finished' && pred.predicted_home_goals === match?.home_goals, 'wrong': match?.status === 'finished' && pred.predicted_home_goals !== match?.home_goals }]">
+                      {{ pred.predicted_home_goals }}
+                    </span>
+                    <span class="separator">-</span>
+                    <span :class="['goal', { 'correct': match?.status === 'finished' && pred.predicted_away_goals === match?.away_goals, 'wrong': match?.status === 'finished' && pred.predicted_away_goals !== match?.away_goals }]">
+                      {{ pred.predicted_away_goals }}
+                    </span>
+                  </div>
+                  <span v-if="getRowClass(pred) === 'row-exact'" class="winner-badge">🏆</span>
+                </td>
+                <td v-if="match?.status === 'finished'" class="points-cell">
+                  <span class="points-amount">{{ calculatePoints(pred) }}</span>
+                  <span class="points-unit">pts</span>
+                </td>
+              </tr>
+            </tbody>
         </table>
       </div>
     </div>
@@ -281,79 +284,130 @@ onMounted(fetchAllData);
 
 .predictions-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0 8px;
 }
 
 .predictions-table th {
   text-align: left;
   padding: 12px;
-  color: gray;
-  font-weight: 500;
-  border-bottom: 2px solid #eee;
+  color: #f8f8f8;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: none;
 }
 
 .predictions-table td {
-  padding: 12px;
-  border-bottom: 1px solid #f8f9fa;
+  padding: 16px 12px;
+  border-top: 1px solid #f0f0f0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.predictions-table tr td:first-child {
+  border-left: 1px solid #f0f0f0;
+  border-top-left-radius: 12px;
+  border-bottom-left-radius: 12px;
+}
+
+.predictions-table tr td:last-child {
+  border-right: 1px solid #f0f0f0;
+  border-top-right-radius: 12px;
+  border-bottom-right-radius: 12px;
 }
 
 .user-cell {
-  font-weight: 500;
+  font-weight: 600;
+  color: #333;
 }
 
 .me-icon {
-  margin-right: 6px;
+  margin-right: 8px;
 }
 
 .score-cell {
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
   font-weight: bold;
   font-size: 1.1rem;
 }
 
+.score-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
 .goal {
-  padding: 2px 6px;
-  border-radius: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  min-width: 24px;
+  text-align: center;
+  transition: all 0.2s;
 }
 
 .correct {
   color: #28a745;
+  background: rgba(40, 167, 69, 0.1);
 }
 
 .wrong {
   color: #dc3545;
+  background: rgba(220, 53, 69, 0.1);
 }
 
 .separator {
-  margin: 0 8px;
   color: #ccc;
+  font-weight: normal;
 }
 
 .winner-badge {
-  margin-left: 10px;
+  position: absolute;
+  right: 10px;
   font-size: 1.2rem;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
 }
 
 .points-cell {
   text-align: right;
-  font-weight: bold;
+  font-weight: 700;
   color: var(--primary-color);
+  white-space: nowrap;
+}
+
+.points-amount {
+  font-size: 1.1rem;
+}
+
+.points-unit {
+  font-size: 0.7rem;
+  color: gray;
+  margin-left: 4px;
+  text-transform: uppercase;
 }
 
 /* Row styles */
 .row-exact {
-  background-color: #eaffea;
-  border-left: 5px solid #28a745;
+  background-color: #f6fff6;
+  transition: background 0.2s;
 }
 
 .row-winner {
-  background-color: #fffdeb;
-  border-left: 5px solid #ffd43b;
+  background-color: #fffdf2;
+  transition: background 0.2s;
 }
 
 .is-me {
-  outline: 2px solid var(--primary-color);
-  background-color: #f0f5ff;
+  background-color: #f0f7ff !important;
+  box-shadow: inset 4px 0 0 var(--primary-color);
+}
+
+.predictions-table tr:hover td {
+  background-color: rgba(0,0,0,0.02);
 }
 
 .loading-state, .error-message {
