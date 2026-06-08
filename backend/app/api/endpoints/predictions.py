@@ -87,24 +87,21 @@ def get_my_predictions(db: Session = Depends(get_db), current_user=Depends(get_c
 
 @router.get("/leaderboard", response_model=List[schemas.LeaderboardEntry])
 def get_leaderboard(db: Session = Depends(get_db)):
-    from app.models.models import User, ScoringRule
+    from app.models.models import User, ScoringRule, PhaseMultiplier
     
     # 1. Get active scoring rule
     rule = db.query(ScoringRule).filter(ScoringRule.is_active == True).first()
     if not rule:
-        # If no rule is active, return empty leaderboard or default
         return []
-
-    # 2. Get all predictions for finished matches
-    # We join with Match to get the actual results
+    
+    # 2. Get all predictions for finished matches, including the match's phase
     predictions = db.query(Prediction, Match).join(Match, Prediction.match_id == Match.id).filter(Match.status == "finished").all()
     
     # 3. Calculate breakdown per user
     user_stats = {} # {username: {exact: 0, winner: 0, home: 0, away: 0, total: 0}}
     
-    # We need a map of user_id to username
     users_map = {u.id: u.username for u in db.query(User).all()}
-
+    
     for pred, match in predictions:
         username = users_map.get(pred.user_id)
         if not username: continue
@@ -114,28 +111,36 @@ def get_leaderboard(db: Session = Depends(get_db)):
         
         stats = user_stats[username]
         
+        # Get the multiplier for this match's phase
+        multiplier_obj = db.query(PhaseMultiplier).filter(PhaseMultiplier.id == match.phase_id).first()
+        multiplier = multiplier_obj.multiplier if multiplier_obj else 1
+        
         # Home Goals
         if pred.predicted_home_goals == match.home_goals:
-            stats["home"] += rule.correct_home_goals_points
-            stats["total"] += rule.correct_home_goals_points
+            pts = rule.correct_home_goals_points * multiplier
+            stats["home"] += pts
+            stats["total"] += pts
             
         # Away Goals
         if pred.predicted_away_goals == match.away_goals:
-            stats["away"] += rule.correct_away_goals_points
-            stats["total"] += rule.correct_away_goals_points
+            pts = rule.correct_away_goals_points * multiplier
+            stats["away"] += pts
+            stats["total"] += pts
             
         # Winner
         pred_winner = "home" if pred.predicted_home_goals > pred.predicted_away_goals else ("away" if pred.predicted_home_goals < pred.predicted_away_goals else "draw")
         actual_winner = "home" if match.home_goals > match.away_goals else ("away" if match.home_goals < match.away_goals else "draw")
         if pred_winner == actual_winner:
-            stats["winner"] += rule.correct_winner_points
-            stats["total"] += rule.correct_winner_points
+            pts = rule.correct_winner_points * multiplier
+            stats["winner"] += pts
+            stats["total"] += pts
             
         # Exact Score
         if pred.predicted_home_goals == match.home_goals and pred.predicted_away_goals == match.away_goals:
-            stats["exact"] += rule.correct_score_points
-            stats["total"] += rule.correct_score_points
-
+            pts = rule.correct_score_points * multiplier
+            stats["exact"] += pts
+            stats["total"] += pts
+    
     # 4. Format for response and sort by total points
     leaderboard = []
     for username, stats in user_stats.items():

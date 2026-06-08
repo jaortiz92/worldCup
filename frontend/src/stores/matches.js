@@ -41,5 +41,13 @@ export const useMatchesStore = defineStore('matches', {
         throw err;
       }
     },
+    async deleteMatch(matchId) {
+      try {
+        await apiClient.delete(`/matches/${matchId}`);
+        this.matches = this.matches.filter(m => m.id !== matchId);
+      } catch (err) {
+        throw err;
+      }
+    },
   },
 });

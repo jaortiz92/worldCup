@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue';
 import apiClient from '../../api/client';
 
 const rules = ref([]);
+const multipliers = ref([]);
 const loading = ref(false);
 const showingCreateModal = ref(false);
 const editingRule = ref(null);
@@ -19,13 +20,17 @@ const form = ref({
 const fetchRules = async () => {
   loading.value = true;
   try {
-    const response = await apiClient.get('/rules/');
-    rules.value = response.data;
+    const [rulesRes, multRes] = await Promise.all([
+      apiClient.get('/rules/'),
+      apiClient.get('/rules/multipliers')
+    ]);
+    rules.value = rulesRes.data;
+    multipliers.value = multRes.data;
    } catch (err) {
-     alert('Error al cargar las reglas');
+     alert('Error al cargar las reglas o multiplicadores');
    } finally {
-    loading.value = false;
-  }
+     loading.value = false;
+   }
 };
 
 const handleSaveRule = async () => {
@@ -49,6 +54,18 @@ const handleSaveRule = async () => {
    } catch (err) {
      alert(err.response?.data?.detail || 'Error al guardar la regla');
    }
+};
+
+const handleUpdateMultiplier = async (multiplier) => {
+  try {
+    await apiClient.patch(`/rules/multipliers/${multiplier.id}`, {
+      phase_name: multiplier.phase_name,
+      multiplier: multiplier.multiplier
+    });
+    await fetchRules();
+  } catch (err) {
+    alert(err.response?.data?.detail || 'Error al actualizar el multiplicador');
+  }
 };
 
 const startEdit = (rule) => {
@@ -83,37 +100,63 @@ onMounted(fetchRules);
        <button @click="openCreateModal" class="btn btn-primary">Agregar Regla</button>
      </div>
  
-     <div class="card">
-       <div v-if="loading">Cargando...</div>
-      <div v-else class="table-responsive">
-        <table>
-           <thead>
-             <tr>
-               <th>Nombre de la Regla</th>
-               <th>Marcador Exacto</th>
-               <th>Ganador</th>
-               <th>Goles Local</th>
-               <th>Goles Visitante</th>
-               <th>Activo</th>
-               <th>Acciones</th>
+      <div class="card">
+        <div v-if="loading">Cargando...</div>
+       <div v-else class="table-responsive">
+         <table>
+            <thead>
+              <tr>
+                <th>Nombre de la Regla</th>
+                <th>Marcador Exacto</th>
+                <th>Ganador</th>
+                <th>Goles Local</th>
+                <th>Goles Visitante</th>
+                <th>Activo</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+           <tbody>
+             <tr v-for="rule in rules" :key="rule.id">
+               <td>{{ rule.rule_name }}</td>
+               <td>{{ rule.correct_score_points }}</td>
+               <td>{{ rule.correct_winner_points }}</td>
+               <td>{{ rule.correct_home_goals_points }}</td>
+               <td>{{ rule.correct_away_goals_points }}</td>
+               <td>{{ rule.is_active ? '✅' : '❌' }}</td>
+                <td>
+                  <button @click="startEdit(rule)" class="btn btn-primary" style="padding: 5px 10px; font-size: 0.8rem;">Editar</button>
+                </td>
              </tr>
-           </thead>
-          <tbody>
-            <tr v-for="rule in rules" :key="rule.id">
-              <td>{{ rule.rule_name }}</td>
-              <td>{{ rule.correct_score_points }}</td>
-              <td>{{ rule.correct_winner_points }}</td>
-              <td>{{ rule.correct_home_goals_points }}</td>
-              <td>{{ rule.correct_away_goals_points }}</td>
-              <td>{{ rule.is_active ? '✅' : '❌' }}</td>
-               <td>
-                 <button @click="startEdit(rule)" class="btn btn-primary" style="padding: 5px 10px; font-size: 0.8rem;">Editar</button>
-               </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+           </tbody>
+         </table>
+       </div>
+     </div>
+
+     <div class="card mt-4">
+        <h2>Multiplicadores por Fase</h2>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Fase</th>
+                <th>Multiplicador</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="pm in multipliers" :key="pm.id">
+                <td>{{ pm.phase_name }}</td>
+                <td>
+                  <input v-model.number="pm.multiplier" type="number" class="form-control" style="width: 80px;" />
+                </td>
+                <td>
+                  <button @click="handleUpdateMultiplier(pm)" class="btn btn-primary" style="padding: 5px 10px; font-size: 0.8rem;">Guardar</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+     </div>
 
     <div v-if="showingCreateModal" class="modal-overlay">
       <div class="modal-content card">

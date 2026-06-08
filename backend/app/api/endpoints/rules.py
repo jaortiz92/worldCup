@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 from app.db.session import get_db
-from app.models.models import ScoringRule
+from app.models.models import ScoringRule, PhaseMultiplier
 from app.schemas import schemas
 from app.api.deps import get_admin_user
 
@@ -39,3 +39,20 @@ def update_rule(rule_id: int, rule_in: schemas.ScoringRuleCreate, db: Session = 
     db.commit()
     db.refresh(db_rule)
     return db_rule
+
+@router.get("/multipliers", response_model=List[schemas.PhaseMultiplierOut])
+def list_multipliers(db: Session = Depends(get_db)):
+    return db.query(PhaseMultiplier).all()
+
+@router.patch("/multipliers/{pm_id}", response_model=schemas.PhaseMultiplierOut)
+def update_multiplier(pm_id: int, pm_in: schemas.PhaseMultiplierCreate, db: Session = Depends(get_db), admin=Depends(get_admin_user)):
+    db_pm = db.query(PhaseMultiplier).filter(PhaseMultiplier.id == pm_id).first()
+    if not db_pm:
+        raise HTTPException(status_code=404, detail="Multiplier not found")
+    
+    for var, value in pm_in.dict().items():
+        setattr(db_pm, var, value)
+    
+    db.commit()
+    db.refresh(db_pm)
+    return db_pm

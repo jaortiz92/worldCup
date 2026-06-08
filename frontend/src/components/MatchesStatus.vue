@@ -13,6 +13,30 @@ const getPrediction = (matchId) => {
   return predictionsStore.myPredictions.find(p => p.match_id === matchId);
 };
 
+const getMatchPredictionStatus = (match) => {
+  if (match.status !== 'finished') return '';
+  const pred = getPrediction(match.id);
+  if (!pred) return '';
+
+  const actualHome = match.home_goals;
+  const actualAway = match.away_goals;
+
+  if (pred.predicted_home_goals === actualHome && pred.predicted_away_goals === actualAway) {
+    return 'row-exact';
+  }
+
+  const predWinner = pred.predicted_home_goals > pred.predicted_away_goals ? 'home' : 
+                     (pred.predicted_home_goals < pred.predicted_away_goals ? 'away' : 'draw');
+  const actualWinner = actualHome > actualAway ? 'home' : 
+                       (actualHome < actualAway ? 'away' : 'draw');
+
+  if (predWinner === actualWinner) {
+    return 'row-winner';
+  }
+
+  return '';
+};
+
 const filteredMatches = computed(() => {
   const matches = matchesStore.matches;
   const now = new Date();
@@ -71,10 +95,12 @@ const filteredMatches = computed(() => {
        <div v-if="filteredMatches.length === 0" class="empty-state">
          No hay partidos disponibles en esta categoría.
        </div>
-       <div v-else class="matches-grid">
-         <div v-for="match in filteredMatches" :key="match.id" class="match-card">
-            <div class="card-header">
-              <span class="match-date">{{ formatToLocalTime(match.match_date) }}</span>
+        <div v-else class="matches-grid">
+          <div v-for="match in filteredMatches" :key="match.id" 
+               :class="['match-card', getMatchPredictionStatus(match)]">
+             <span v-if="getMatchPredictionStatus(match) === 'row-exact'" class="winner-badge">🏆</span>
+             <div class="card-header">
+               <span class="match-date">{{ formatToLocalTime(match.match_date) }} <b>{{ match.phase.phase_name }}</b></span>
               <span :class="['status-badge', `status-${match.status}`]">{{ match.status }}</span>
             </div>
             
@@ -205,10 +231,27 @@ const filteredMatches = computed(() => {
   display: flex;
   flex-direction: column;
   border: 1px solid #eee;
+  position: relative;
 }
 .match-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+.row-exact {
+  background-color: #e6ffe6 !important;
+}
+.row-winner {
+  background-color: #f8f5c6 !important;
+}
+
+.winner-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 1.2rem;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+  z-index: 1;
 }
 
 .card-header {

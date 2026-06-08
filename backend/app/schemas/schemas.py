@@ -2,24 +2,31 @@ from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional, List
 
+
 class UserBase(BaseModel):
     username: str
+
 
 class UserCreate(UserBase):
     password: str
 
+
 class UserOut(UserBase):
     id: int
     role: str
+
     class Config:
         from_attributes = True
+
 
 class PasswordChangeMe(BaseModel):
     current_password: str
     new_password: str
 
+
 class PasswordChangeAdmin(BaseModel):
     new_password: str
+
 
 class TeamBase(BaseModel):
     name: str
@@ -27,30 +34,57 @@ class TeamBase(BaseModel):
     code_iso: Optional[str] = None
     groups: Optional[str] = None
 
+
 class TeamCreate(TeamBase):
     pass
 
+
 class TeamOut(TeamBase):
     id: int
+
     class Config:
         from_attributes = True
+
 
 class Token(BaseModel):
     access_token: str
     token_type: str
 
+
+class PhaseMultiplierBase(BaseModel):
+    phase_name: str
+    multiplier: int
+
+
+class PhaseMultiplierCreate(PhaseMultiplierBase):
+    pass
+
+
+class PhaseMultiplierOut(PhaseMultiplierBase):
+    id: int
+
+    class Config:
+        from_attributes = True
+
+
 class MatchBase(BaseModel):
     home_team_id: int
     away_team_id: int
     match_date: datetime
+    phase_id: int
+
 
 class MatchCreate(MatchBase):
     pass
+
 
 class MatchUpdate(BaseModel):
     home_goals: Optional[int] = None
     away_goals: Optional[int] = None
     status: Optional[str] = None
+    match_date: Optional[datetime] = None
+    phase_id: Optional[int] = None
+
 
 class MatchOut(MatchBase):
     id: int
@@ -59,8 +93,11 @@ class MatchOut(MatchBase):
     status: str
     home_team: Optional[TeamOut] = None
     away_team: Optional[TeamOut] = None
+    phase: Optional[PhaseMultiplierOut] = None
+
     class Config:
         from_attributes = True
+
 
 class ScoringRuleBase(BaseModel):
     rule_name: str
@@ -70,37 +107,47 @@ class ScoringRuleBase(BaseModel):
     correct_away_goals_points: int
     is_active: bool = True
 
+
 class ScoringRuleCreate(ScoringRuleBase):
     pass
 
+
 class ScoringRuleOut(ScoringRuleBase):
     id: int
+
     class Config:
         from_attributes = True
+
 
 class PredictionBase(BaseModel):
     match_id: int
     predicted_home_goals: int
     predicted_away_goals: int
 
+
 class PredictionCreate(PredictionBase):
     pass
+
 
 class PredictionUpdate(BaseModel):
     predicted_home_goals: Optional[int] = None
     predicted_away_goals: Optional[int] = None
 
+
 class PredictionOut(PredictionBase):
     id: int
     user_id: int
     points_earned: int
+
     class Config:
         from_attributes = True
+
 
 class MatchPredictionOut(BaseModel):
     username: str
     predicted_home_goals: int
     predicted_away_goals: int
+
 
 class LeaderboardEntry(BaseModel):
     username: str

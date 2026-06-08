@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from datetime import timezone
 from typing import List
 from app.db.session import get_db
 from app.models.models import Match
@@ -38,6 +39,15 @@ def update_match(match_id: int, match_in: schemas.MatchUpdate, db: Session = Dep
     if not db_match:
         raise HTTPException(status_code=404, detail="Match not found")
 
+    # Validate date update restriction
+    if "match_date" in match_in.dict(exclude_unset=True):
+        if db_match.status not in ["pending", "in_progress"] and db_match.match_date.replace(
+                tzinfo=timezone.utc) != match_in.match_date:
+            raise HTTPException(
+                status_code=400,
+                detail="Match date can only be edited for pending or in-progress matches"
+            )
+
     for var, value in match_in.dict(exclude_unset=True).items():
         setattr(db_match, var, value)
 
@@ -49,3 +59,21 @@ def update_match(match_id: int, match_in: schemas.MatchUpdate, db: Session = Dep
         calculate_match_points(db, match_id)
 
     return db_match
+
+
+@router.delete("/{match_id}")
+def delete_match(match_id: int, db: Session = Depends(get_db), admin=Depends(get_admin_user)):
+    db_match = db.query(Match).filter(Match.id == match_id).first()
+    if not db_match:
+        raise HTTPException(status_code=404, detail="Match not found")
+
+    # Check if predictions exist
+    if db_match.predictions:
+        raise HTTPException(
+            status_code=400,
+            detail="Match cannot be deleted because it already has predictions"
+        )
+
+    db.delete(db_match)
+    db.commit()
+    return {"detail": "Match deleted successfully"}

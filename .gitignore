@@ -25,3 +25,4 @@ dist-ssr
 *.sw?
 *.env*
 AGENT.md
+*.csv*
