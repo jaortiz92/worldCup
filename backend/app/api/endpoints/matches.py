@@ -15,6 +15,14 @@ def list_matches(db: Session = Depends(get_db)):
     return db.query(Match).order_by(Match.match_date.asc()).all()
 
 
+@router.get("/{match_id}", response_model=schemas.MatchOut)
+def get_match(match_id: int, db: Session = Depends(get_db)):
+    db_match = db.query(Match).filter(Match.id == match_id).first()
+    if not db_match:
+        raise HTTPException(status_code=404, detail="Match not found")
+    return db_match
+
+
 @router.post("/", response_model=schemas.MatchOut)
 def create_match(match_in: schemas.MatchCreate, db: Session = Depends(get_db), admin=Depends(get_admin_user)):
     db_match = Match(**match_in.dict())

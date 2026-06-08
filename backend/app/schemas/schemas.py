@@ -14,6 +14,13 @@ class UserOut(UserBase):
     class Config:
         from_attributes = True
 
+class PasswordChangeMe(BaseModel):
+    current_password: str
+    new_password: str
+
+class PasswordChangeAdmin(BaseModel):
+    new_password: str
+
 class TeamBase(BaseModel):
     name: str
     flag_url: Optional[str] = None
@@ -90,6 +97,15 @@ class PredictionOut(PredictionBase):
     class Config:
         from_attributes = True
 
+class MatchPredictionOut(BaseModel):
+    username: str
+    predicted_home_goals: int
+    predicted_away_goals: int
+
 class LeaderboardEntry(BaseModel):
     username: str
     total_points: int
+    exact_score_pts: int = 0
+    winner_pts: int = 0
+    home_goals_pts: int = 0
+    away_goals_pts: int = 0

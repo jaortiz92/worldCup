@@ -3,6 +3,8 @@ import { useAuthStore } from '../stores/auth';
 import HomeView from '../views/HomeView.vue';
 import LoginView from '../views/LoginView.vue';
 import PredictionView from '../views/PredictionView.vue';
+import ProfileView from '../views/ProfileView.vue';
+import MatchPredictionsView from '../views/MatchPredictionsView.vue';
 import MatchesAdminView from '../views/admin/MatchesView.vue';
 import UsersAdminView from '../views/admin/UsersView.vue';
 import RulesAdminView from '../views/admin/RulesView.vue';
@@ -20,6 +22,18 @@ const routes = [
     path: '/predict/:id', 
     name: 'Predict', 
     component: PredictionView, 
+    meta: { requiresAuth: true } 
+  },
+  { 
+    path: '/profile', 
+    name: 'Profile', 
+    component: ProfileView, 
+    meta: { requiresAuth: true } 
+  },
+  { 
+    path: '/predictions-match/:id', 
+    name: 'MatchPredictions', 
+    component: MatchPredictionsView, 
     meta: { requiresAuth: true } 
   },
   { 

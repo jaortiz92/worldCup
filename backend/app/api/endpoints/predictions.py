@@ -10,6 +10,22 @@ from app.api.deps import get_current_user
 
 router = APIRouter()
 
+@router.get("/match/{match_id}", response_model=List[schemas.MatchPredictionOut])
+def get_match_predictions(match_id: int, db: Session = Depends(get_db)):
+    from app.models.models import User
+    
+    # Join Prediction with User to get usernames
+    predictions = db.query(Prediction, User.username).join(User, Prediction.user_id == User.id).filter(Prediction.match_id == match_id).all()
+    
+    return [
+        {
+            "username": username,
+            "predicted_home_goals": p.predicted_home_goals,
+            "predicted_away_goals": p.predicted_away_goals
+        }
+        for p, username in predictions
+    ]
+
 @router.post("/", response_model=schemas.PredictionOut)
 def create_prediction(prediction_in: schemas.PredictionCreate, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     # 1. Check if match exists
@@ -71,10 +87,66 @@ def get_my_predictions(db: Session = Depends(get_db), current_user=Depends(get_c
 
 @router.get("/leaderboard", response_model=List[schemas.LeaderboardEntry])
 def get_leaderboard(db: Session = Depends(get_db)):
-    from app.models.models import User
-    results = db.query(
-        User.username, 
-        func.sum(Prediction.points_earned).label("total_points")
-    ).join(Prediction).group_by(User.id).order_by(func.sum(Prediction.points_earned).desc()).all()
+    from app.models.models import User, ScoringRule
     
-    return [{"username": r[0], "total_points": r[1] or 0} for r in results]
+    # 1. Get active scoring rule
+    rule = db.query(ScoringRule).filter(ScoringRule.is_active == True).first()
+    if not rule:
+        # If no rule is active, return empty leaderboard or default
+        return []
+
+    # 2. Get all predictions for finished matches
+    # We join with Match to get the actual results
+    predictions = db.query(Prediction, Match).join(Match, Prediction.match_id == Match.id).filter(Match.status == "finished").all()
+    
+    # 3. Calculate breakdown per user
+    user_stats = {} # {username: {exact: 0, winner: 0, home: 0, away: 0, total: 0}}
+    
+    # We need a map of user_id to username
+    users_map = {u.id: u.username for u in db.query(User).all()}
+
+    for pred, match in predictions:
+        username = users_map.get(pred.user_id)
+        if not username: continue
+        
+        if username not in user_stats:
+            user_stats[username] = {"exact": 0, "winner": 0, "home": 0, "away": 0, "total": 0}
+        
+        stats = user_stats[username]
+        
+        # Home Goals
+        if pred.predicted_home_goals == match.home_goals:
+            stats["home"] += rule.correct_home_goals_points
+            stats["total"] += rule.correct_home_goals_points
+            
+        # Away Goals
+        if pred.predicted_away_goals == match.away_goals:
+            stats["away"] += rule.correct_away_goals_points
+            stats["total"] += rule.correct_away_goals_points
+            
+        # Winner
+        pred_winner = "home" if pred.predicted_home_goals > pred.predicted_away_goals else ("away" if pred.predicted_home_goals < pred.predicted_away_goals else "draw")
+        actual_winner = "home" if match.home_goals > match.away_goals else ("away" if match.home_goals < match.away_goals else "draw")
+        if pred_winner == actual_winner:
+            stats["winner"] += rule.correct_winner_points
+            stats["total"] += rule.correct_winner_points
+            
+        # Exact Score
+        if pred.predicted_home_goals == match.home_goals and pred.predicted_away_goals == match.away_goals:
+            stats["exact"] += rule.correct_score_points
+            stats["total"] += rule.correct_score_points
+
+    # 4. Format for response and sort by total points
+    leaderboard = []
+    for username, stats in user_stats.items():
+        leaderboard.append({
+            "username": username,
+            "total_points": stats["total"],
+            "exact_score_pts": stats["exact"],
+            "winner_pts": stats["winner"],
+            "home_goals_pts": stats["home"],
+            "away_goals_pts": stats["away"]
+        })
+    
+    leaderboard.sort(key=lambda x: x["total_points"], reverse=True)
+    return leaderboard

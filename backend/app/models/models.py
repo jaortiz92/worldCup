@@ -10,6 +10,7 @@ class User(Base):
     username = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
     role = Column(String, default="user")  # 'admin' or 'user'
+    token_version = Column(Integer, default=0)
     
     predictions = relationship("Prediction", back_populates="user")
 

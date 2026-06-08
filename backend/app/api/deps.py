@@ -16,11 +16,12 @@ def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_
             headers={"WWW-Authenticate": "Bearer"},
         )
     username = payload.get("sub")
+    token_version = payload.get("token_version")
     user = db.query(User).filter(User.username == username).first()
-    if user is None:
+    if user is None or user.token_version != token_version:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found",
+            detail="User not found or session invalidated",
             headers={"WWW-Authenticate": "Bearer"},
         )
     return user

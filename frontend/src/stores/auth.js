@@ -57,5 +57,27 @@ export const useAuthStore = defineStore('auth', {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
     },
+    async changePassword(currentPassword, newPassword) {
+      try {
+        await apiClient.patch('/auth/me/password', {
+          current_password: currentPassword,
+          new_password: newPassword,
+        });
+        this.logout();
+        return true;
+      } catch (err) {
+        throw err;
+      }
+    },
+    async changeUserPassword(userId, newPassword) {
+      try {
+        await apiClient.patch(`/auth/users/${userId}/password`, {
+          new_password: newPassword,
+        });
+        return true;
+      } catch (err) {
+        throw err;
+      }
+    },
   },
 });
