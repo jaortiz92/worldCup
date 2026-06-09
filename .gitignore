@@ -26,3 +26,4 @@ dist-ssr
 *.env*
 AGENT.md
 *.csv*
+*__pycache__*

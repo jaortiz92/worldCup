@@ -45,6 +45,5 @@ def calculate_match_points(db: Session, match_id: int):
 
         # Apply the progressive multiplier
         pred.points_earned = points * multiplier
-        print(pred.points_earned)
 
     db.commit()
