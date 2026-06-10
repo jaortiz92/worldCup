@@ -3,6 +3,7 @@ import { ref, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import { useMatchesStore } from '../stores/matches';
+import { formatToLocalTime } from '../utils/date';
 import apiClient from '../api/client';
 
 const route = useRoute();
@@ -119,7 +120,7 @@ onMounted(fetchAllData);
           </div>
         </div>
         <div class="match-details">
-          <span class="date">{{ match?.match_date }} <b>{{ match?.phase?.phase_name  }}</b></span>
+          <span class="date">{{ formatToLocalTime(match?.match_date) }} <b>{{ match?.phase?.phase_name  }}</b></span>
           <span :class="['status-badge', `status-${match?.status}`]">{{ match?.status }}</span>
         </div>
       </div>
