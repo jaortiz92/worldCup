@@ -13,7 +13,7 @@ router = APIRouter()
 
 @router.get("/", response_model=List[schemas.MatchOut])
 def list_matches(db: Session = Depends(get_db)):
-    return db.query(Match).order_by(Match.match_date.asc()).all()
+    return db.query(Match).order_by(Match.match_date.desc()).all()
 
 
 @router.get("/{match_id}", response_model=schemas.MatchOut)

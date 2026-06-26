@@ -75,18 +75,18 @@ const calculatePoints = (prediction) => {
 
 const getRowClass = (prediction) => {
   if (!match.value || match.value.status !== 'finished') return '';
-
+  
   const actualHome = match.value.home_goals;
   const actualAway = match.value.away_goals;
   
   if (prediction.predicted_home_goals === actualHome && prediction.predicted_away_goals === actualAway) {
     return 'row-exact';
   }
-
+  
   const predWinner = prediction.predicted_home_goals > prediction.predicted_away_goals ? 'home' : 
                      (prediction.predicted_home_goals < prediction.predicted_away_goals ? 'away' : 'draw');
   const actualWinner = actualHome > actualAway ? 'home' : 
-                       (actualHome < actualAway ? 'away' : 'draw');
+                      (actualHome < actualAway ? 'away' : 'draw');
   
   if (predWinner === actualWinner) {
     return 'row-winner';
@@ -95,7 +95,26 @@ const getRowClass = (prediction) => {
   return '';
 };
 
+const isMatchStarted = computed(() => {
+  if (!match.value || !match.value.match_date) return false;
+  const dateStr = match.value.match_date;
+  const utcDateStr = dateStr.endsWith('Z') ? dateStr : `${dateStr}Z`;
+  const matchDate = new Date(utcDateStr);
+  const now = new Date();
+  return !isNaN(matchDate.getTime()) && now.getTime() >= matchDate.getTime();
+});
+
+const isPredictionsHidden = computed(() => {
+  return (match.value?.phase?.multiplier > 1) && !isMatchStarted.value;
+});
+
+const displayPredictions = computed(() => {
+  if (!isPredictionsHidden.value) return predictions.value;
+  return predictions.value.filter(p => p.username === authStore.user?.username);
+});
+
 onMounted(fetchAllData);
+
 </script>
 
 <template>
@@ -120,7 +139,7 @@ onMounted(fetchAllData);
           </div>
         </div>
         <div class="match-details">
-          <span class="date">{{ formatToLocalTime(match?.match_date) }} <b>{{ match?.phase?.phase_name  }}</b></span>
+          <span class="date">{{ formatToLocalTime(match?.match_date) }} <b>{{ match?.phase?.phase_name  }}</b><span v-if="match?.phase?.multiplier > 1" class="multiplier-badge">x{{ match.phase.multiplier }}</span></span>
           <span :class="['status-badge', `status-${match?.status}`]">{{ match?.status }}</span>
         </div>
       </div>
@@ -132,6 +151,11 @@ onMounted(fetchAllData);
       <div class="predictions-card">
         <h3>Predicciones de los Participantes</h3>
         
+        <div v-if="isPredictionsHidden" class="lock-banner">
+          <span class="lock-icon">🔒</span>
+          <p>Las predicciones de otros usuarios están ocultas debido al multiplicador de esta fase. Se revelarán una vez que el partido comience.</p>
+        </div>
+
         <table class="predictions-table">
           <thead>
             <tr>
@@ -141,7 +165,7 @@ onMounted(fetchAllData);
             </tr>
           </thead>
             <tbody>
-              <tr v-for="pred in predictions" :key="pred.username" 
+              <tr v-for="pred in displayPredictions" :key="pred.username" 
                   :class="[getRowClass(pred), { 'is-me': pred.username === authStore.user?.username }]">
                 <td class="user-cell" data-label="Usuario">
                   <span v-if="pred.username === authStore.user?.username" class="me-icon">👤</span>
@@ -314,6 +338,25 @@ onMounted(fetchAllData);
   text-align: center;
 }
 
+.lock-banner {
+  background: #fffbeb;
+  border: 1px solid #fcd34d;
+  color: #92400e;
+  padding: 1rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.lock-banner .lock-icon {
+  font-size: 1.2rem;
+}
+
 .predictions-table {
   width: 100%;
   border-collapse: separate;
@@ -441,6 +484,27 @@ onMounted(fetchAllData);
 
 .predictions-table tr:hover td {
   background-color: rgba(0,0,0,0.02);
+}
+
+.multiplier-badge {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: #000;
+  font-weight: 900;
+  font-size: 0.7rem;
+  padding: 1px 6px;
+  border-radius: 10px;
+  margin-left: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  animation: pulse 2s infinite ease-in-out;
+  display: inline-block;
+  border: 1px solid #B8860B;
+  vertical-align: middle;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
 }
 
 @media (max-width: 768px) {

@@ -38,10 +38,10 @@ const getMatchPredictionStatus = (match) => {
 };
 
 const filteredMatches = computed(() => {
-  const matches = matchesStore.matches;
+  const matches = [...matchesStore.matches];
   const now = new Date();
   
-  return matches.filter(match => {
+  const filtered = matches.filter(match => {
     const matchDate = new Date(match.match_date.replace(' ', 'T') + (match.match_date.endsWith('Z') ? '' : 'Z'));
     const isToday = isSameDayLocal(match.match_date);
     const isPast = matchDate < now;
@@ -50,14 +50,20 @@ const filteredMatches = computed(() => {
     if (activeTab.value === 'today') {
       return isToday;
     } else if (activeTab.value === 'upcoming') {
-      // Upcoming: Not today and in the future
       return !isToday && !isPast && !isFinished;
     } else if (activeTab.value === 'results') {
-      // Results: Finished or passed today
       return isFinished || isPast;
     }
     return true;
   });
+
+  if (activeTab.value === 'today' || activeTab.value === 'upcoming') {
+    return filtered.sort((a, b) => {
+      return new Date(a.match_date) - new Date(b.match_date);
+    });
+  }
+
+  return filtered;
 });
 </script>
 
@@ -100,7 +106,7 @@ const filteredMatches = computed(() => {
                :class="['match-card', getMatchPredictionStatus(match)]">
              <span v-if="getMatchPredictionStatus(match) === 'row-exact'" class="winner-badge">🏆</span>
              <div class="card-header">
-               <span class="match-date">{{ formatToLocalTime(match.match_date) }} <b>{{ match.phase.phase_name }}</b></span>
+               <span class="match-date">{{ formatToLocalTime(match.match_date) }} <b>{{ match.phase.phase_name }}</b><span v-if="match.phase?.multiplier > 1" class="multiplier-badge">x{{ match.phase.multiplier }}</span></span>
               <span :class="['status-badge', `status-${match.status}`]">{{ match.status }}</span>
             </div>
             
@@ -401,6 +407,27 @@ const filteredMatches = computed(() => {
   color: gray;
   font-size: 0.9rem;
   font-weight: 500;
+}
+
+.multiplier-badge {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: #000;
+  font-weight: 900;
+  font-size: 0.7rem;
+  padding: 1px 6px;
+  border-radius: 10px;
+  margin-left: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  animation: pulse 2s infinite ease-in-out;
+  display: inline-block;
+  border: 1px solid #B8860B;
+  vertical-align: middle;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
 }
 
 .loading-state {
